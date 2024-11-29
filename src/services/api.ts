@@ -23,7 +23,7 @@ export const uploadPDF = async (file: File): Promise<ProcessedFile> => {
       id: response.data.id,
       name: file.name,
       suggestedFolder: response.data.suggestedFolder,
-      dateAdded: new Date(),
+      dateAdded: ""+  new Date(),
       content: response.data.content,
       path: response.data.path
     };
@@ -49,6 +49,35 @@ export const searchDocuments = async (query: string): Promise<ProcessedFile[]> =
     if (axios.isAxiosError(error)) {
       const message = error.response?.data?.details || error.response?.data?.error || error.message;
       throw new Error(`Failed to search documents: ${message}`);
+    }
+    throw error;
+  }
+};
+
+export const getFileContent = async (fileId: string): Promise<{ content: string }> => {
+  try {
+    const response = await api.get(`/file/${fileId}`);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.details || error.response?.data?.error || error.message;
+      throw new Error(`Failed to fetch file content: ${message}`);
+    }
+    throw error;
+  }
+};
+
+export const getFolderStructure = async (): Promise<any> => {
+  try {
+    const response = await api.get('/folders');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message =
+        error.response?.data?.details ||
+        error.response?.data?.error ||
+        error.message;
+      throw new Error(`Failed to fetch folder structure: ${message}`);
     }
     throw error;
   }

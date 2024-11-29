@@ -4,6 +4,6 @@ haystack-ai
 elasticsearch-haystack
 sentence-transformers
 pdfplumber
-fitz
 PyMuPDF
 openai
+python-dotenv

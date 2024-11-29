@@ -26,7 +26,7 @@ CORS(app)
 # Initialize Haystack components
 try:
     document_store = ElasticsearchDocumentStore(
-        hosts="http://localhost:9200", index  = "test_index"
+        hosts="http://localhost:9200"
     )
 
     model = "BAAI/bge-large-en-v1.5"
@@ -43,8 +43,8 @@ try:
     query_pipeline.add_component("text_embedder", SentenceTransformersTextEmbedder(model=model))
     query_pipeline.add_component("retriever", ElasticsearchEmbeddingRetriever(document_store=document_store))
     query_pipeline.connect("text_embedder.embedding", "retriever.query_embedding")
-    count = document_store.count_documents()
-    print(count)
+    #count = document_store.count_documents()
+    #print(count)
     logger.info("Successfully initialized Haystack components")
 except Exception as e:
     logger.error(f"Failed to initialize Haystack components: {str(e)}")
@@ -203,6 +203,7 @@ def upload_file():
             'id': file_id,
             'suggestedFolder': completion_json.get("kategorie"),
             'content': completion_json.get("inhalt"),
+            'path': file_path,  # Fügen Sie diese Zeile hinzu
             'message': 'File successfully processed'
         })
 
@@ -231,7 +232,7 @@ def search():
             'name': doc.meta.get('name', 'Unknown'),
             'suggestedFolder': doc.meta.get('suggested_folder', 'Sonstiges'),
             'path': doc.meta.get('path', ''),
-            'content': doc.content[:200],
+            'content': doc.content,
             'dateAdded': datetime.now().isoformat()
         } for doc in results["retriever"]["documents"]]
 
@@ -258,6 +259,38 @@ def health_check():
         return jsonify({
             'status': 'unhealthy',
             'error': str(e)
+        }), 500
+
+
+@app.route('/folders', methods=['GET'])
+def get_folder_structure():
+    try:
+        root_dir = UPLOAD_FOLDER  # Dies haben Sie bereits definiert
+        folder_structure = {}
+
+        for dirpath, dirnames, filenames in os.walk(root_dir):
+            # Relativer Pfad vom root_dir
+            rel_path = os.path.relpath(dirpath, root_dir)
+            # Verwenden Sie os.sep für plattformübergreifende Kompatibilität
+            folders = rel_path.split(os.sep)
+            # Starten Sie vom Stamm des Dicts
+            current_level = folder_structure
+            for folder in folders:
+                if folder == '.':
+                    continue
+                if folder not in current_level:
+                    current_level[folder] = {}
+                current_level = current_level[folder]
+            # Fügen Sie Dateien auf dieser Ebene hinzu
+            if filenames:
+                current_level['files'] = filenames
+
+        return jsonify(folder_structure)
+    except Exception as e:
+        logger.error(f"Error fetching folder structure: {str(e)}")
+        return jsonify({
+            'error': 'Error fetching folder structure',
+            'details': str(e)
         }), 500
 
 if __name__ == '__main__':

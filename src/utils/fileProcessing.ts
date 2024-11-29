@@ -2,7 +2,7 @@ export interface ProcessedFile {
   id: string;
   name: string;
   suggestedFolder: string;
-  dateAdded: Date;
+  dateAdded: string;
   content?: string;
   path: string; // Neues Feld hinzugefügt
 
