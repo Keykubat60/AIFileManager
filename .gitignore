@@ -24,3 +24,5 @@ server/myenv/*
 *.sw?
 
 .env
+
+server/uploads/*
